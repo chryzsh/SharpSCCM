@@ -79,16 +79,16 @@ namespace SharpSCCM
                                         if (matchKeyValuePair.Value[index].Groups[idxGroup].Name == "CollectionVariableName")
                                         {
                                             string collectionVariableValue = Dpapi.Execute(matchKeyValuePair.Value[index].Groups[idxGroup + 1].Value, masterkeys);
-                                            Console.WriteLine($"\n    CollectionVariableName:  {matchKeyValuePair.Value[index].Groups[idxGroup].Value}");
-                                            Console.WriteLine($"    CollectionVariableValue: {collectionVariableValue}");
+                                            Console.WriteLine($"\n    CollectionVariableName:  {matchKeyValuePair.Value[index].Groups[idxGroup].Value.Replace("\0", "")}");
+                                            Console.WriteLine($"    CollectionVariableValue: {collectionVariableValue?.Replace("\0", "")}");
                                         }
                                         // Add network access usernames and passwords together
                                         else if (matchKeyValuePair.Value[index].Groups[idxGroup].Name == "NetworkAccessPassword")
                                         {
                                             string networkAccessUsername = Dpapi.Execute(matchKeyValuePair.Value[index].Groups[idxGroup + 1].Value, masterkeys);
                                             string networkAccessPassword = Dpapi.Execute(matchKeyValuePair.Value[index].Groups[idxGroup].Value, masterkeys);
-                                            Console.WriteLine($"\n    NetworkAccessUsername: {networkAccessUsername}");
-                                            Console.WriteLine($"    NetworkAccessPassword: {networkAccessPassword}");
+                                            Console.WriteLine($"\n    NetworkAccessUsername: {networkAccessUsername?.Replace("\0", "")}");
+                                            Console.WriteLine($"    NetworkAccessPassword: {networkAccessPassword?.Replace("\0", "")}");
                                             if (networkAccessUsername.StartsWith("00 00 0E 0E 0E") || networkAccessPassword.StartsWith("00 00 0E 0E 0E"))
                                             {
                                                 Console.WriteLine("    [!] At the point in time this secret was downloaded, SCCM was configured to use the client's machine account instead of NAA");
@@ -98,10 +98,10 @@ namespace SharpSCCM
                                         {
                                             // Do nothing, these are already added
                                         }
-                                        else 
+                                        else
                                         {
                                             string secretPlaintext = Dpapi.Execute(matchKeyValuePair.Value[index].Groups[idxGroup].Value, masterkeys);
-                                            Console.WriteLine($"\n    Plaintext secret: {secretPlaintext}");
+                                            Console.WriteLine($"\n    Plaintext secret: {secretPlaintext?.Replace("\0", "")}");
                                         }
                                         
                                         // Remove secret type from remaining secrets to display, courtesy of ChatGPT
@@ -142,8 +142,8 @@ namespace SharpSCCM
                 try
                 {
                     string plaintextCollectionVariableValue = Dpapi.Execute(protectedCollectionVariableValue, masterkeys);
-                    Console.WriteLine("    CollectionVariableName:  {0}", collectionVariableName);
-                    Console.WriteLine("    CollectionVariableValue: {0}", plaintextCollectionVariableValue);
+                    Console.WriteLine("    CollectionVariableName:  {0}", collectionVariableName?.Replace("\0", ""));
+                    Console.WriteLine("    CollectionVariableValue: {0}", plaintextCollectionVariableValue?.Replace("\0", ""));
                 }
                 catch (Exception)
                 {
@@ -176,8 +176,8 @@ namespace SharpSCCM
                     }
                     else
                     {
-                        Console.WriteLine("    NetworkAccessUsername: {0}", username);
-                        Console.WriteLine("    NetworkAccessPassword: {0}", password);
+                        Console.WriteLine("    NetworkAccessUsername: {0}", username?.Replace("\0", ""));
+                        Console.WriteLine("    NetworkAccessPassword: {0}", password?.Replace("\0", ""));
                         Console.WriteLine();
                     }
                 }
@@ -199,7 +199,7 @@ namespace SharpSCCM
                 try
                 {
                     string plaintextTaskSequenceValue = Dpapi.Execute(protectedTaskSequenceValue, masterkeys);
-                    Console.WriteLine("    Plaintext task sequence: {0}", plaintextTaskSequenceValue);
+                    Console.WriteLine("    Plaintext task sequence: {0}", plaintextTaskSequenceValue?.Replace("\0", ""));
                 }
                 catch (Exception)
                 {
