@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Net;
 using System.Net.Http;
@@ -6,6 +7,8 @@ using System.Security.Cryptography;
 using System.Security.Cryptography.Pkcs;
 using System.Security.Cryptography.X509Certificates;
 using System.Text;
+using System.Threading;
+using System.Threading.Tasks;
 using System.Xml;
 
 // Configuration Manager SDK
@@ -155,16 +158,25 @@ namespace SharpSCCM
 
             if (signingCertificate != null && encryptionCertificate != null && clientId != null)
             {
+                // Wait for SCCM database to process the registration before requesting policies
+                if (!string.IsNullOrEmpty(registerClient))
+                {
+                    Console.WriteLine("[+] Waiting 10 seconds for SCCM database to update...");
+                    Thread.Sleep(10000);
+                }
+
                 // Send request for policy assignments to obtain policy locations
                 ConfigMgrPolicyAssignmentReply assignmentReply = SendPolicyAssignmentRequest(clientId, signingCertificate, managementPoint, siteCode);
 
+                var tasks = new List<Task>();
                 foreach (PolicyAssignment policyAssignment in assignmentReply.ReplyAssignments.PolicyAssignments)
                 {
-                    GetSecretsFromPolicy(policyAssignment, managementPoint, clientId, encryptionCertificate, signingCertificate, outputPath);
+                    tasks.Add(GetSecretsFromPolicy(policyAssignment, managementPoint, clientId, encryptionCertificate, signingCertificate, outputPath));
                 }
+                Task.WaitAll(tasks.ToArray());
             }
         }
-        public static async void GetSecretsFromPolicy(PolicyAssignment policyAssignment, string managementPoint, SmsClientId clientId, MessageCertificateX509 encryptionCertificate, MessageCertificateX509 signingCertificate, string outputPath = null)
+        public static async Task GetSecretsFromPolicy(PolicyAssignment policyAssignment, string managementPoint, SmsClientId clientId, MessageCertificateX509 encryptionCertificate, MessageCertificateX509 signingCertificate, string outputPath = null)
         {
 
             // Get secret policies
@@ -760,7 +772,7 @@ namespace SharpSCCM
                                 policyAssignment.Policy.Location = policyLocation;
                             }
 
-                            GetSecretsFromPolicy(policyAssignment, szMPHostname, new SmsClientId(szMediaGUIDPlain), encryptioncertificate, signingCertificate);
+                            GetSecretsFromPolicy(policyAssignment, szMPHostname, new SmsClientId(szMediaGUIDPlain), encryptioncertificate, signingCertificate).Wait();
                         }
                     }
                 }
