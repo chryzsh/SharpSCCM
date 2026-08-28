@@ -227,7 +227,7 @@ namespace SharpSCCM
                             {
                                 XmlDocument tsSequenceDoc = new XmlDocument();
                                 tsSequenceDoc.LoadXml(szDecData.Replace("\0", "").Trim());
-                                Helpers.DecompressXMLNodes(policyXmlDoc);
+                                Helpers.DecompressXMLNodes(tsSequenceDoc);
                                 // search for 'OSDLocalAdminPassword', 'OSDDomainName', 'OSDJoinPassword', 'OSDJoinAccount', 'OSDRegisteredUserName', 'OSDRegisteredOrgName'
                                 XmlNodeList osdLocalAdminPWNodes = tsSequenceDoc.SelectNodes("//variable[@name='OSDLocalAdminPassword' or @name='OSDDomainName' or @name='OSDJoinPassword' or @name='OSDJoinAccount' or @name='OSDRegisteredUserName' or @name='OSDRegisteredOrgName']");
                                 foreach (XmlNode variableNode in osdLocalAdminPWNodes)
