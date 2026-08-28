@@ -4,15 +4,14 @@ using System.IO;
 using System.IO.Compression;
 using System.Linq;
 using System.Text;
-using System.Xml;
 
 namespace SharpSCCM.UnitTests
 {
     [TestClass]
-    public class HelpersTests
+    public class MgmtPointMessagingTests
     {
         [TestMethod]
-        public void DecompressXMLNodes_TaskSequenceVariable_ExpandsVariableValue()
+        public void ExtractTaskSequenceVariables_CompressedTaskSequence_ExtractsVariableValue()
         {
             string taskSequenceXml = "<TaskSequence><variable name=\"OSDJoinPassword\">test-password</variable></TaskSequence>";
             byte[] taskSequenceBytes = Encoding.Unicode.GetPreamble().Concat(Encoding.Unicode.GetBytes(taskSequenceXml)).ToArray();
@@ -28,14 +27,11 @@ namespace SharpSCCM.UnitTests
             }
 
             string compressedHex = BitConverter.ToString(compressedBytes).Replace("-", string.Empty);
-            XmlDocument taskSequenceDoc = new XmlDocument();
-            taskSequenceDoc.LoadXml($"<PolicyXML Compression=\"zlib\">{compressedHex}</PolicyXML>");
+            string taskSequencePolicy = $"<PolicyXML Compression=\"zlib\">{compressedHex}</PolicyXML>";
 
-            Helpers.DecompressXMLNodes(taskSequenceDoc);
+            string extractedVariables = MgmtPointMessaging.ExtractTaskSequenceVariables(taskSequencePolicy);
 
-            XmlNode passwordNode = taskSequenceDoc.SelectSingleNode("//variable[@name='OSDJoinPassword']");
-            Assert.IsNotNull(passwordNode);
-            Assert.AreEqual("test-password", passwordNode.InnerText);
+            StringAssert.Contains(extractedVariables, "TaskSequence variable 'OSDJoinPassword': test-password");
         }
     }
 }

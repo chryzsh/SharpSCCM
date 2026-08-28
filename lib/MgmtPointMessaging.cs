@@ -225,16 +225,7 @@ namespace SharpSCCM
 
                             if (szSecretName == "TS_Sequence")
                             {
-                                XmlDocument tsSequenceDoc = new XmlDocument();
-                                tsSequenceDoc.LoadXml(szDecData.Replace("\0", "").Trim());
-                                Helpers.DecompressXMLNodes(tsSequenceDoc);
-                                // search for 'OSDLocalAdminPassword', 'OSDDomainName', 'OSDJoinPassword', 'OSDJoinAccount', 'OSDRegisteredUserName', 'OSDRegisteredOrgName'
-                                XmlNodeList osdLocalAdminPWNodes = tsSequenceDoc.SelectNodes("//variable[@name='OSDLocalAdminPassword' or @name='OSDDomainName' or @name='OSDJoinPassword' or @name='OSDJoinAccount' or @name='OSDRegisteredUserName' or @name='OSDRegisteredOrgName']");
-                                foreach (XmlNode variableNode in osdLocalAdminPWNodes)
-                                {
-                                    string szVariableName = variableNode.Attributes["name"].Value;
-                                    outputCredsDecrypted += $"TaskSequence variable '{szVariableName}': {variableNode.InnerText}\n";
-                                }
+                                outputCredsDecrypted += ExtractTaskSequenceVariables(szDecData);
                             }
                             if (szSecretName == "Value")
                             {
@@ -283,6 +274,23 @@ namespace SharpSCCM
                 // Thanks to Evan McBroom for reversing and writing this decryption routine! https://gist.github.com/EvanMcBroom/525d84b86f99c7a4eeb4e3495cffcbf0
                 Console.WriteLine("[+] Encrypted hex strings can be decrypted offline using the \"DeobfuscateSecretString.exe <string>\" command");
             }
+        }
+
+        internal static string ExtractTaskSequenceVariables(string taskSequenceXml)
+        {
+            XmlDocument tsSequenceDoc = new XmlDocument();
+            tsSequenceDoc.LoadXml(taskSequenceXml.Replace("\0", "").Trim());
+            Helpers.DecompressXMLNodes(tsSequenceDoc);
+
+            StringBuilder output = new StringBuilder();
+            XmlNodeList variableNodes = tsSequenceDoc.SelectNodes("//variable[@name='OSDLocalAdminPassword' or @name='OSDDomainName' or @name='OSDJoinPassword' or @name='OSDJoinAccount' or @name='OSDRegisteredUserName' or @name='OSDRegisteredOrgName']");
+            foreach (XmlNode variableNode in variableNodes)
+            {
+                string variableName = variableNode.Attributes["name"].Value;
+                output.AppendLine($"TaskSequence variable '{variableName}': {variableNode.InnerText}");
+            }
+
+            return output.ToString();
         }
 
         public static MessageCertificateX509 LocalSmsEncryptionCertificate()
